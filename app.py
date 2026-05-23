@@ -13,18 +13,15 @@ def make_numpy_function(expr_str, variables):
         expr = sp.sympify(expr_str)
     except Exception as e:
         return None, f"表达式解析失败: {e}"
-
     symbols = [sp.Symbol(v) for v in variables]
     try:
-        f_lambdified = sp.lambdify(symbols, expr, modules=["numpy", "math"])
+        return sp.lambdify(symbols, expr, modules=["numpy", "math"]), None
     except Exception as e:
         return None, f"函数编译失败: {e}"
 
-    return f_lambdified, None
-
 
 # ---------------------------------------------------------------------------
-# 页面配置 & 全局 CSS
+# 页面配置 & CSS（仿 GeoGebra 视觉风格）
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
@@ -36,171 +33,137 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* ---- 全局 ---- */
+    /* === 全局 === */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        color: #2c2c2c;
     }
 
-    /* ---- 主标题 ---- */
-    .main-header {
-        text-align: center;
-        padding: 0.8rem 0 0.2rem 0;
-        margin-bottom: 0;
-    }
-    .main-header h1 {
-        font-size: 2.4rem;
+    /* === 主标题 === */
+    .app-title {
+        font-size: 1.5rem;
         font-weight: 700;
-        color: #667eea;
+        color: #333;
         margin: 0;
-        padding: 0;
-        letter-spacing: 2px;
-    }
-    .main-header p {
-        font-size: 1rem;
-        color: #8e8ea0;
-        margin: 0.3rem 0 0 0;
-        font-weight: 400;
+        padding: 0.4rem 0 0 0;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #e0e0e0;
     }
 
-    /* ---- 结果卡片 ---- */
-    .result-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 1.5rem 2rem;
-        margin: 1.5rem 0 0.5rem 0;
-        color: #fff;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.30);
-    }
-    .result-card .label {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        opacity: 0.85;
-        margin-bottom: 0.3rem;
-    }
-    .result-card .value {
-        font-size: 2rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        margin: 0.2rem 0;
-        word-break: break-all;
-    }
-    .result-card .formula {
-        font-size: 0.9rem;
-        opacity: 0.75;
-        margin-top: 0.3rem;
-    }
-
-    /* ---- 侧边栏 ---- */
+    /* === 侧边栏：代数区 === */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #f8f9fc 0%, #eef0f7 100%);
-        border-right: 1px solid #e0e3eb;
+        background: #ffffff;
+        border-right: 1px solid #ddd;
     }
     [data-testid="stSidebar"] .stMarkdown h3 {
-        font-size: 1.15rem;
-        color: #3a3d4a;
-    }
-    [data-testid="stSidebar"] .stMarkdown h4 {
         font-size: 1rem;
-        color: #5a5f72;
-    }
-    [data-testid="stSidebar"] .stMarkdown h5 {
-        font-size: 0.88rem;
-        color: #7a7f92;
-        margin-bottom: 0.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.4rem;
     }
     [data-testid="stSidebar"] .stRadio > div {
-        gap: 0.4rem;
+        gap: 0.25rem;
     }
     [data-testid="stSidebar"] .stRadio label {
-        padding: 0.55rem 1rem;
-        border-radius: 10px;
-        transition: all 0.2s ease;
+        padding: 0.35rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.88rem;
         font-weight: 500;
-        font-size: 0.95rem;
+        color: #444;
+    }
+    /* 侧边栏 section 分隔 */
+    .sidebar-section {
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 0.8rem 0.9rem 0.5rem 0.9rem;
+        margin-bottom: 0.8rem;
+        background: #fafafa;
+    }
+    .sidebar-section h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        margin: 0 0 0.6rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    /* ---- 输入框 ---- */
+    /* === 输入框（仿 GeoGebra 代数条） === */
     input[type="text"] {
-        border: 2px solid #e0e3eb !important;
-        border-radius: 10px !important;
-        padding: 0.55rem 0.9rem !important;
+        border: 1px solid #bbb !important;
+        border-radius: 4px !important;
+        padding: 0.4rem 0.7rem !important;
         font-family: 'Consolas', 'Fira Code', 'Courier New', monospace !important;
-        font-size: 0.93rem !important;
-        transition: border-color 0.25s ease !important;
+        font-size: 0.9rem !important;
+        background: #fff !important;
+        transition: border-color 0.2s !important;
     }
     input[type="text"]:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+        border-color: #1A5F7A !important;
+        box-shadow: 0 0 0 2px rgba(26, 95, 122, 0.12) !important;
     }
 
     [data-testid="stNumberInput"] input {
-        border: 2px solid #e0e3eb !important;
-        border-radius: 10px !important;
-        transition: border-color 0.25s ease !important;
+        border: 1px solid #bbb !important;
+        border-radius: 4px !important;
+        background: #fff !important;
+        font-size: 0.88rem !important;
     }
     [data-testid="stNumberInput"] input:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+        border-color: #1A5F7A !important;
+        box-shadow: 0 0 0 2px rgba(26, 95, 122, 0.12) !important;
     }
 
-    /* ---- 提示卡片 ---- */
-    .tip-card {
-        background: #f8f9fc;
-        border-left: 4px solid #667eea;
+    /* === 结果卡片 === */
+    .result-card {
+        background: #f5f7fa;
+        border: 1px solid #e0e0e0;
         border-radius: 8px;
-        padding: 0.7rem 1rem;
-        margin-top: 1rem;
-        font-size: 0.82rem;
-        color: #5a5f72;
-        line-height: 1.5;
+        padding: 1rem 1.5rem;
+        margin: 0.8rem 0 0 0;
     }
-    .tip-card strong {
-        color: #667eea;
+    .result-card .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #888;
+        margin-bottom: 0.2rem;
+    }
+    .result-card .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1A5F7A;
+        font-variant-numeric: tabular-nums;
     }
 
-    /* ---- divider ---- */
+    /* === Latex 公式居中 === */
+    .latex-container {
+        text-align: center;
+        margin: 0.4rem 0 0.2rem 0;
+    }
+
+    /* === divider === */
     hr {
-        margin: 0.8rem 0;
-    }
-
-    /* ---- 修复 plotly legend 溢出的通用保护 ---- */
-    .js-plotly-plot .legend {
-        transform: none !important;
-    }
-
-    /* ---- 移动端适配 ---- */
-    @media (max-width: 768px) {
-        .main-header h1 {
-            font-size: 1.6rem;
-        }
-        .result-card .value {
-            font-size: 1.4rem;
-        }
+        margin: 0.4rem 0;
+        border-color: #e8e8e8;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ---- 顶部标题 ----
-st.markdown("""
-<div class="main-header">
-    <h1>微积分多维可视化</h1>
-    <p>交互式定积分 & 二重积分几何直观演示</p>
-</div>
-""", unsafe_allow_html=True)
+# ---- 全局标题 ----
+st.markdown('<div class="app-title">微积分多维可视化</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# 侧边栏
+# 侧边栏：代数区（GeoGebra 风格）
 # ---------------------------------------------------------------------------
 
 with st.sidebar:
-    st.markdown("### ⚙️  参数配置")
-    st.markdown("---")
+    st.markdown("### 代数区")
 
     dimension = st.radio(
-        "选择积分维度",
+        "视图",
         options=["一元函数积分 (2D 面积)", "二元函数积分 (3D 体积)"],
         label_visibility="collapsed",
     )
@@ -213,45 +176,50 @@ with st.sidebar:
 if dimension == "一元函数积分 (2D 面积)":
 
     with st.sidebar:
-        st.markdown("#### 📐  函数与区间")
+        st.markdown('<div class="sidebar-section"><h4>函数</h4>', unsafe_allow_html=True)
 
         func_str = st.text_input(
-            "输入一元函数 f(x)",
+            "f(x) =",
             value="x**2 - 2*x + 2",
             key="1d_func",
-            help="支持 Python 数学语法，如 sin(x), exp(x), log(x), sqrt(x) 等",
+            label_visibility="collapsed",
         )
+        st.caption("例: sin(x), exp(x), x**2 - 2*x + 2")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="sidebar-section"><h4>积分区间 [a, b]</h4>', unsafe_allow_html=True)
 
         c1, c2 = st.columns(2)
         with c1:
-            a = st.number_input("积分下界 a", value=0.0, step=0.5, key="1d_a")
+            a = st.number_input("下界 a", value=0.0, step=0.5, key="1d_a")
         with c2:
-            b = st.number_input("积分上界 b", value=3.0, step=0.5, key="1d_b")
+            b = st.number_input("上界 b", value=3.0, step=0.5, key="1d_b")
 
-        st.markdown("""
-        <div class="tip-card">
-            <strong>提示</strong>：拖拽图表可缩放，双击重置视图。
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # ---- 主区域 ----
+    # ---------- 主区域：几何绘图区 ----------
     f, err = make_numpy_function(func_str, ["x"])
 
     if err:
-        st.error(f"❌  {err}")
+        st.error(err)
     elif a >= b:
-        st.warning("⚠️  积分上界 b 必须大于下界 a，请重新设置。")
+        st.warning("积分上界 b 必须大于下界 a。")
     else:
-        x_vals = np.linspace(a, b, 300)
-        y_vals = f(x_vals)
-        if np.isscalar(y_vals):
-            y_vals = np.full_like(x_vals, y_vals)
-
         integral_val, _ = integrate.quad(f, a, b)
 
-        # ---- 绘图 ----
+        # ---- 公式展示：独立在图表上方 ----
+        st.latex(
+            r"\int_{%s}^{%s} \left(%s\right) \, dx = %.6f"
+            % (f"{a:.4g}", f"{b:.4g}", func_str, integral_val)
+        )
+
+        # ---- 构建 2D 图表 ----
         margin = max((b - a) * 0.3, 0.5)
-        x_dense = np.linspace(a - margin, b + margin, 600)
+        x_min = a - margin
+        x_max_ = b + margin
+
+        x_dense = np.linspace(x_min, x_max_, 600)
         y_dense = f(x_dense)
         if np.isscalar(y_dense):
             y_dense = np.full_like(x_dense, y_dense)
@@ -261,104 +229,104 @@ if dimension == "一元函数积分 (2D 面积)":
         if np.isscalar(y_fill):
             y_fill = np.full_like(x_fill, y_fill)
 
+        # 计算 y 范围，让 x 轴居中
+        y_all = np.concatenate([y_dense, [0]])
+        y_pad = max((np.max(y_all) - np.min(y_all)) * 0.15, 0.5)
+        y_min_range = min(np.min(y_all) - y_pad, -0.5)
+        y_max_range = max(np.max(y_all) + y_pad,  0.5)
+
         fig = go.Figure()
 
-        # 积分区域（底层填充）
+        # 积分填充区域
         fig.add_trace(go.Scatter(
             x=np.concatenate([x_fill, x_fill[::-1]]),
             y=np.concatenate([y_fill, np.zeros_like(y_fill)]),
             fill="toself",
-            fillcolor="rgba(102, 126, 234, 0.20)",
+            fillcolor="rgba(26, 95, 122, 0.18)",
             line=dict(width=0),
-            name="积分区域",
             hoverinfo="skip",
+            showlegend=False,
         ))
 
-        # 函数曲线
+        # 函数曲线 — GeoGebra 经典深蓝
         fig.add_trace(go.Scatter(
             x=x_dense,
             y=y_dense,
             mode="lines",
-            name=f"f(x) = {func_str}",
-            line=dict(color="#667eea", width=3),
+            line=dict(color="#1A5F7A", width=2.6),
             hovertemplate="x = %{x:.4f}<br>f(x) = %{y:.4f}<extra></extra>",
+            showlegend=False,
         ))
 
-        # 积分边界
-        for boundary, label, color in [
-            (a, "x = a", "#e74c3c"),
-            (b, "x = b", "#2ecc71"),
-        ]:
+        # 积分边界虚线 + 端点标记
+        for boundary, color in [(a, "#CC3333"), (b, "#339933")]:
             fb = float(f(boundary))
+
+            # 虚线
+            y0 = min(0, fb)
+            y1 = max(0, fb)
+            fig.add_trace(go.Scatter(
+                x=[boundary, boundary],
+                y=[y0, y1],
+                mode="lines",
+                line=dict(color=color, width=1.6, dash="dash"),
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+            # 端点圆点
             fig.add_trace(go.Scatter(
                 x=[boundary, boundary],
                 y=[0, fb],
-                mode="lines+markers",
-                name=label,
-                line=dict(color=color, width=2, dash="dash"),
-                marker=dict(size=6, color=color),
+                mode="markers",
+                marker=dict(size=7, color=color, line=dict(width=1.5, color="white")),
+                showlegend=False,
+                hoverinfo="skip",
             ))
 
-        # 零线
-        fig.add_hline(
-            y=0,
-            line=dict(color="#b0b8c8", width=1),
+        fig.update_xaxes(
+            title="x",
+            range=[x_min, x_max_],
+            showgrid=True, gridcolor="#E8E8E8", gridwidth=1,
+            zeroline=True, zerolinecolor="#333", zerolinewidth=1.8,
+            showline=True, linecolor="#333", linewidth=1.5,
+            mirror=False,
         )
-
-        chart_title = (
-            f"∫<sub>[{a:.2g}, {b:.2g}]</sub> "
-            f"({func_str}) dx"
+        fig.update_yaxes(
+            title="f(x)",
+            range=[y_min_range, y_max_range],
+            showgrid=True, gridcolor="#E8E8E8", gridwidth=1,
+            zeroline=True, zerolinecolor="#333", zerolinewidth=1.8,
+            showline=True, linecolor="#333", linewidth=1.5,
+            mirror=False,
+            scaleanchor="x",
+            scaleratio=1,
         )
 
         fig.update_layout(
-            title=dict(
-                text=chart_title,
-                font=dict(size=18, color="#2a2d3a"),
-                x=0.5,
-                xanchor="center",
-            ),
-            xaxis=dict(
-                title="x",
-                zeroline=False,
-                gridcolor="#eaecf2",
-            ),
-            yaxis=dict(
-                title="f(x)",
-                zeroline=False,
-                gridcolor="#eaecf2",
-            ),
-            hovermode="x unified",
-            template="plotly_white",
-            plot_bgcolor="#fafbfc",
+            showlegend=False,
+            plot_bgcolor="#FFFFFF",
             paper_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=10, r=10, t=10, b=10),
             font=dict(
                 family="Inter, Microsoft YaHei, PingFang SC, sans-serif",
                 size=13,
+                color="#333",
             ),
-            margin=dict(l=20, r=20, t=60, b=20),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5,
-                bgcolor="rgba(255,255,255,0.85)",
-                bordercolor="#e0e3eb",
-                borderwidth=1,
-                font=dict(size=12),
-            ),
+            xaxis=dict(constrain="domain"),
+            yaxis=dict(constrain="domain"),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
 
-        # 结果卡片
+        # 数值结果卡片
         st.markdown(f"""
         <div class="result-card">
-            <div class="label">定积分结果</div>
+            <div class="label">积分结果</div>
             <div class="value">{integral_val:.8f}</div>
-            <div class="formula">
-                &int;<sub>{a:.4g}</sub><sup>{b:.4g}</sup> ({func_str}) dx
-            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -368,42 +336,41 @@ if dimension == "一元函数积分 (2D 面积)":
 else:
 
     with st.sidebar:
-        st.markdown("#### 📊  函数与积分区域")
+        st.markdown('<div class="sidebar-section"><h4>函数</h4>', unsafe_allow_html=True)
 
         func_str = st.text_input(
-            "输入二元函数 f(x, y)",
+            "f(x, y) =",
             value="sin(x) * cos(y) + 2",
             key="2d_func",
-            help="支持 Python 数学语法，如 sin(x), cos(y), exp(x+y), sqrt(x**2+y**2) 等",
+            label_visibility="collapsed",
         )
+        st.caption("例: sin(x)*cos(y) + 2, x**2 + y**2")
 
-        st.markdown("##### X 轴范围")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="sidebar-section"><h4>X 轴范围</h4>', unsafe_allow_html=True)
         cx1, cx2 = st.columns(2)
         with cx1:
-            x_min = st.number_input("x 下界", value=-np.pi, step=0.5, key="2d_xmin")
+            x_min = st.number_input("下界", value=-np.pi, step=0.5, key="2d_xmin")
         with cx2:
-            x_max = st.number_input("x 上界", value=np.pi, step=0.5, key="2d_xmax")
+            x_max = st.number_input("上界", value=np.pi, step=0.5, key="2d_xmax")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("##### Y 轴范围")
+        st.markdown('<div class="sidebar-section"><h4>Y 轴范围</h4>', unsafe_allow_html=True)
         cy1, cy2 = st.columns(2)
         with cy1:
-            y_min = st.number_input("y 下界", value=-np.pi, step=0.5, key="2d_ymin")
+            y_min = st.number_input("下界", value=-np.pi, step=0.5, key="2d_ymin")
         with cy2:
-            y_max = st.number_input("y 上界", value=np.pi, step=0.5, key="2d_ymax")
+            y_max = st.number_input("上界", value=np.pi, step=0.5, key="2d_ymax")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <div class="tip-card">
-            <strong>提示</strong>：鼠标拖拽旋转视角，滚轮缩放，右键平移。
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ---- 主区域 ----
+    # ---------- 主区域：几何绘图区 ----------
     f, err = make_numpy_function(func_str, ["x", "y"])
 
     if err:
-        st.error(f"❌  {err}")
+        st.error(err)
     elif x_min >= x_max or y_min >= y_max:
-        st.warning("⚠️  积分上界必须大于下界，请重新设置。")
+        st.warning("积分上界必须大于下界。")
     else:
         N = 80
         x_grid = np.linspace(x_min, x_max, N)
@@ -415,7 +382,7 @@ else:
             if np.isscalar(Z):
                 Z = np.full_like(X, Z)
         except Exception as e:
-            st.error(f"❌  函数求值失败: {e}")
+            st.error(f"函数求值失败: {e}")
             st.stop()
 
         integral_val, _ = integrate.dblquad(
@@ -424,62 +391,69 @@ else:
             lambda y: x_min, lambda y: x_max,
         )
 
-        # ---- 3D 绘图 ----
+        # ---- 公式展示 ----
+        st.latex(
+            r"\iint_{[%s,%s] \times [%s,%s]} \left(%s\right) \, dx \, dy = %.6f"
+            % (f"{x_min:.4g}", f"{x_max:.4g}", f"{y_min:.4g}", f"{y_max:.4g}", func_str, integral_val)
+        )
+
+        # ---- 构建 3D 图表 ----
         fig = go.Figure()
 
         # 顶面
         fig.add_trace(go.Surface(
             x=X, y=Y, z=Z,
             colorscale=[
-                [0.0, "#667eea"],
-                [0.3, "#764ba2"],
-                [0.6, "#e74c3c"],
-                [0.8, "#f39c12"],
-                [1.0, "#2ecc71"],
+                [0.0, "#1A5F7A"],
+                [0.3, "#2E8B8B"],
+                [0.6, "#5B9BD5"],
+                [0.8, "#8CB5E0"],
+                [1.0, "#C5D9F0"],
             ],
-            name="顶面 f(x, y)",
+            opacity=0.90,
             showscale=True,
-            opacity=0.92,
             colorbar=dict(
-                title="f(x, y)",
+                title="",
                 thickness=14,
                 len=0.5,
                 outlinewidth=0,
+                tickfont=dict(size=11, color="#555"),
             ),
             contours=dict(
                 z=dict(
                     show=True,
                     usecolormap=True,
-                    highlightcolor="white",
+                    highlightcolor="rgba(255,255,255,0.6)",
                     project=dict(z=True),
                     width=1,
                 ),
             ),
+            showlegend=False,
         ))
 
-        # 底面 z=0
+        # 底面
         Z_bottom = np.zeros_like(Z)
         fig.add_trace(go.Surface(
             x=X, y=Y, z=Z_bottom,
-            colorscale=[[0, "#bcc3d0"], [1, "#bcc3d0"]],
-            name="底面 z = 0",
+            colorscale=[[0, "#e0e0e0"], [1, "#e0e0e0"]],
+            opacity=0.30,
             showscale=False,
-            opacity=0.35,
+            showlegend=False,
         ))
 
-        # 四个侧壁
+        # 四个垂直侧壁
         Y_side, T = np.meshgrid(y_grid, np.linspace(0, 1, 30))
-        X_side2, T2 = np.meshgrid(x_grid, np.linspace(0, 1, 30))
+        X_side_g, T_g = np.meshgrid(x_grid, np.linspace(0, 1, 30))
 
-        side_params = [
-            ("x = x_min", x_min, Y_side, T, "#636efa"),
-            ("x = x_max", x_max, Y_side, T, "#e74c3c"),
-            ("y = y_min", y_min, X_side2, T2, "#2ecc71"),
-            ("y = y_max", y_max, X_side2, T2, "#f39c12"),
+        side_defs = [
+            (x_min,  "y", Y_side, T,   "#1A5F7A"),
+            (x_max,  "y", Y_side, T,   "#CC3333"),
+            (y_min,  "x", X_side_g, T_g, "#339933"),
+            (y_max,  "x", X_side_g, T_g, "#D4A017"),
         ]
 
-        for name, val, grid_a, grid_t, color in side_params:
-            if "x_side" in name or name.startswith("x"):
+        for val, axis, grid_a, grid_t, color in side_defs:
+            if axis == "y":
                 X_side = np.full_like(grid_a, val)
                 Y_side = grid_a
                 f_vals = f(val, grid_a)
@@ -495,70 +469,62 @@ else:
             fig.add_trace(go.Surface(
                 x=X_side, y=Y_side, z=Z_side,
                 colorscale=[[0, color], [1, color]],
-                name=name,
+                opacity=0.38,
                 showscale=False,
-                opacity=0.42,
+                showlegend=False,
             ))
 
-        chart_title = (
-            f"∬<sub>[{x_min:.2g},{x_max:.2g}]"
-            f"&times;[{y_min:.2g},{y_max:.2g}]</sub>"
-            f" ({func_str}) dx dy"
-        )
-
         fig.update_layout(
-            title=dict(
-                text=chart_title,
-                font=dict(size=18, color="#2a2d3a"),
-                x=0.5,
-                xanchor="center",
-            ),
+            showlegend=False,
             scene=dict(
                 xaxis=dict(
                     title="x",
-                    gridcolor="#eaecf2",
-                    backgroundcolor="rgba(0,0,0,0)",
+                    gridcolor="#E8E8E8",
+                    backgroundcolor="rgba(255,255,255,1)",
+                    zerolinecolor="#333",
+                    showline=True,
+                    linecolor="#333",
+                    linewidth=1.2,
                 ),
                 yaxis=dict(
                     title="y",
-                    gridcolor="#eaecf2",
-                    backgroundcolor="rgba(0,0,0,0)",
+                    gridcolor="#E8E8E8",
+                    backgroundcolor="rgba(255,255,255,1)",
+                    zerolinecolor="#333",
+                    showline=True,
+                    linecolor="#333",
+                    linewidth=1.2,
                 ),
                 zaxis=dict(
                     title="f(x, y)",
-                    gridcolor="#eaecf2",
-                    backgroundcolor="rgba(0,0,0,0)",
+                    gridcolor="#E8E8E8",
+                    backgroundcolor="rgba(255,255,255,1)",
+                    zerolinecolor="#333",
+                    showline=True,
+                    linecolor="#333",
+                    linewidth=1.2,
                 ),
-                camera=dict(eye=dict(x=1.7, y=1.7, z=1.1)),
+                camera=dict(eye=dict(x=1.7, y=1.7, z=1.0)),
             ),
-            template="plotly_white",
-            margin=dict(l=0, r=0, t=60, b=0),
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor="rgba(255,255,255,1)",
             font=dict(
                 family="Inter, Microsoft YaHei, PingFang SC, sans-serif",
                 size=13,
-            ),
-            legend=dict(
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01,
-                bgcolor="rgba(255,255,255,0.85)",
-                bordercolor="#e0e3eb",
-                borderwidth=1,
-                font=dict(size=11),
+                color="#333",
             ),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
 
-        # 结果卡片
+        # 数值结果卡片
         st.markdown(f"""
         <div class="result-card">
-            <div class="label">二重积分结果</div>
+            <div class="label">积分结果</div>
             <div class="value">{integral_val:.8f}</div>
-            <div class="formula">
-                &conint;<sub>[{x_min:.4g},{x_max:.4g}]&times;[{y_min:.4g},{y_max:.4g}]</sub>
-                ({func_str}) dx dy
-            </div>
         </div>
         """, unsafe_allow_html=True)
